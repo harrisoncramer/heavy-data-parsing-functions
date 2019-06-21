@@ -26,7 +26,7 @@ csv().fromFile(path.resolve(__dirname, "results.csv"))
                 return accumulator;
             }
         }, []).map((obj) => {
-            obj['allLinks'] = obj['link'];
+            obj['allLinks'] = obj['link'].filter((link) => link !== "http://www.fara.gov/contact.html");
             delete obj['link'];
             return obj;
         });
