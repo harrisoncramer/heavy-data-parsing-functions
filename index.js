@@ -10,23 +10,29 @@ csv().fromFile(path.resolve(__dirname, "results.csv"))
             return {
                 number: obj["REGISTRATIONNUMBER"],
                 registrant: obj["REGISTRANTNAME"],
-                type: obj["DOCUMENTTYPE"],
-                date: moment(obj["STAMPED/RECEIVEDDATE"]).valueOf(),
-                link: [obj["DOCUMENT_URL"]]
+                date: moment(obj["STAMPED/RECEIVEDDATE"], "DD-MMM-YYYY").valueOf(),
+                link: [{
+                    url: obj["DOCUMENT_URL"],
+                    text: obj["DOCUMENTTYPE"],
+                    dateFiled: moment(obj["STAMPED/RECEIVEDDATE"], "DD-MMM-YYYY").valueOf()
+                }]
             };
         }).reduce((accumulator, currentValue) => {
             const matching = accumulator.findIndex((obj) => obj.number === currentValue.number && obj.registrant === currentValue.registrant); // Will return -1 if no match...
             if(matching === -1){
                 accumulator.push(currentValue);
+                if(accumulator.date < currentValue.date){
+                    accumulator.date = currentValue.date; // Set date (aka most recent filing)
+                };
                 return accumulator;
             } else {
                 let oldLinks = accumulator[matching].link;
                 let newLink = currentValue.link;
-                accumulator[matching].link = [ ...oldLinks, ...newLink ];
+                accumulator[matching].link = [...oldLinks, ...newLink ];
                 return accumulator;
             }
         }, []).map((obj) => {
-            obj['allLinks'] = obj['link'].filter((link) => link !== "http://www.fara.gov/contact.html");
+            obj['allLinks'] = obj['link'].filter((link) => link.url !== "http://www.fara.gov/contact.html");
             delete obj['link'];
             return obj;
         });
